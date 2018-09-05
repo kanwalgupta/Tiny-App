@@ -51,6 +51,11 @@ app.post("/urls", (req, res) => {
   res.redirect("http://localhost:8080/urls/"+shortURL);
 });
 
+app.post("/urls/:id", (req, res) => {
+  urlDatabase[req.params.id]=req.body.newLongURL;
+  res.redirect("/urls");;
+});
+
 app.post("/urls/:id/delete", (req, res) => {
   console.log("inside delete");
   console.log(req.params.id);
