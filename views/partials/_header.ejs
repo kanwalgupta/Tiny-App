@@ -1,1 +1,13 @@
 <header> Tiny-App </header>
+<% if(username === undefined) { %>
+<form action="/login" method="POST">
+  Login:<br>
+  UserName<input type="text" name="username" ><br>
+  <input type="submit" value="Submit">
+</form>
+<% } else { %>
+ <form action="/logout" method="POST">
+ User: <%= username %> has been logged in.
+ <input type="submit" value="Logout">
+ </form>
+<% } %>
