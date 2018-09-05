@@ -46,10 +46,16 @@ app.get("/urls/:id", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-
   let shortURL = generateRandomString();
   urlDatabase[shortURL]=req.body.longURL;
   res.redirect("http://localhost:8080/urls/"+shortURL);
+});
+
+app.post("/urls/:id/delete", (req, res) => {
+  console.log("inside delete");
+  console.log(req.params.id);
+  delete urlDatabase[req.params.id];
+  res.redirect("/urls");
 });
 
 function generateRandomString() {
