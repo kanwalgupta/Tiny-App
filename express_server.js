@@ -68,7 +68,7 @@ app.get("/urls", (req, res) => {
     let templateVars = { urls: urlDatabase ,  user: users[req.cookies["user_id"]] };
     res.render("urls_index", templateVars);
   }else{
-    res.render('/login');
+    res.render('user_login');
   }
 });
 
@@ -81,12 +81,18 @@ app.get("/urls/new", (req, res) => {
   }
 });
 
+app.get("/login", (req, res) => {
+  console.log("Login page");
+  res.render("user_login");
+ });
+
 app.get("/u/:shortURL", (req, res) => {
   let longURL =urlDatabase[req.params.shortURL];
   res.redirect(longURL);
 });
 
 app.get("/urls/:id", (req, res) => {
+  // TODO : condition checks for login by users and if shorturl belongs to particular user
   let templateVars = { shortURL: req.params.id , longURL : urlDatabase[req.params.id],  user: users[req.cookies["user_id"]] };
   res.render("urls_show", templateVars);
 });
@@ -107,7 +113,6 @@ app.post("/urls/:id", (req, res) => {
 });
 
 app.post("/urls/:id/delete", (req, res) => {
-  console.log("inside delete");
   console.log(req.params.id);
   delete urlDatabase[req.params.id];
   res.redirect("/urls");
@@ -119,10 +124,10 @@ app.post("/login", (req, res) => {
   }else{
     res.sendStatus(403);
   }
- });
+});
 
 app.post("/logout", (req, res) => {
-  res.clearCookie('username');
+  res.clearCookie('user_id');
   res.redirect('/urls');
  });
 
