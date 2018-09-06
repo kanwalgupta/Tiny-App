@@ -1,5 +1,5 @@
 <header> Tiny-App </header>
-<% if(username === undefined) { %>
+<% if(!username) { %>
 <form action="/login" method="POST">
   Login:<br>
   UserName<input type="text" name="username" ><br>

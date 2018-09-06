@@ -11,6 +11,41 @@ var urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
+const users = {
+  "sabrina": {
+    id: "sabrina",
+    email: "sabrinasandhu@google.com",
+    password: "purple-monkey-dinosaur"
+  },
+ "sapnagoel": {
+    id: "sapnagoel",
+    email: "sapna@sangrur.com",
+    password: "dishwasher-funk"
+  }
+}
+
+function isValidUser(email,password,res){
+  let userFound = false ;
+  Object.keys(users).forEach(key => {
+    if(users[key].email === email && users[key].password === password){
+      userFound = true;
+      res.cookie("user_id",key);
+      return;
+    }
+  });
+  return userFound;
+}
+
+function isExistingUser(email){
+  let userFound = false ;
+  Object.keys(users).forEach(key => {
+    if(users[key].email === email){
+      userFound = true;
+      return;
+    }
+  });
+  return userFound;
+}
 
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -29,12 +64,21 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  let templateVars = { urls: urlDatabase,  username: req.cookies["username"] };
-  res.render("urls_index", templateVars);
+  if(req.cookies["user_id"]){
+    let templateVars = { urls: urlDatabase ,  user: users[req.cookies["user_id"]] };
+    res.render("urls_index", templateVars);
+  }else{
+    res.render('/login');
+  }
 });
 
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  if(req.cookies["user_id"]){
+    let templateVars = { user: users[req.cookies["user_id"]] };
+    res.render("urls_new", templateVars);
+  }else{
+    res.render('/login');
+  }
 });
 
 app.get("/u/:shortURL", (req, res) => {
@@ -43,8 +87,12 @@ app.get("/u/:shortURL", (req, res) => {
 });
 
 app.get("/urls/:id", (req, res) => {
-  let templateVars = { shortURL: req.params.id , longURL : urlDatabase[req.params.id],  username: req.cookies["username"] };
+  let templateVars = { shortURL: req.params.id , longURL : urlDatabase[req.params.id],  user: users[req.cookies["user_id"]] };
   res.render("urls_show", templateVars);
+});
+
+app.get("/register", (req, res) => {
+  res.render("user_registration");
 });
 
 app.post("/urls", (req, res) => {
@@ -66,14 +114,32 @@ app.post("/urls/:id/delete", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  res.cookie('username',req.body.username);
-  res.redirect('/urls');
+  if(isValidUser(req.body.email , req.body.password,res)){
+    res.redirect('/urls');
+  }else{
+    res.sendStatus(403);
+  }
  });
 
 app.post("/logout", (req, res) => {
   res.clearCookie('username');
   res.redirect('/urls');
  });
+
+app.post("/register", (req, res) => {
+  let user_id = generateRandomString();
+ if(req.body.email === "" || req.body.password === "" || isExistingUser(req.body.email)){
+    res.sendStatus(400);
+  }else{
+    users[user_id] = {
+      id: user_id ,
+      email: req.body.email,
+      password: req.body.password
+    }
+    res.cookie('user_id',user_id);
+    res.redirect('/urls');
+   }
+});
 
 function generateRandomString() {
   let randomString = Math.random().toString(36).replace('0.', '').substring(0,6);
