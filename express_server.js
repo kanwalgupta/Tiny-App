@@ -1,6 +1,7 @@
 var express = require("express");
 var app = express();
 app.set("view engine", "ejs");
+const bcrypt = require('bcrypt');
 const bodyParser = require("body-parser");
 var cookieParser = require('cookie-parser');
 app.use(cookieParser());
@@ -27,7 +28,7 @@ const users = {
 function isValidUser(email,password,res){
   let userFound = false ;
   Object.keys(users).forEach(key => {
-    if(users[key].email === email && users[key].password === password){
+    if(users[key].email === email && bcrypt.compareSync(password, users[key].password)){
       userFound = true;
       res.cookie("user_id",key);
       return;
@@ -172,10 +173,11 @@ app.post("/register", (req, res) => {
  if(req.body.email === "" || req.body.password === "" || isExistingUser(req.body.email)){
     res.sendStatus(400);
   }else{
+    const hashedPassword = bcrypt.hashSync(req.body.password, 10);
     users[user_id] = {
       id: user_id ,
       email: req.body.email,
-      password: req.body.password
+      password: hashedPassword
     }
     res.cookie('user_id',user_id);
     res.redirect('/urls');
