@@ -8,8 +8,8 @@ app.use(bodyParser.urlencoded({extended: true}));
 var PORT = 8080; // default port 8080
 
 var urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "b2xVn2": { shortURL : "b2xVn2", longURL :"http://www.lighthouselabs.ca" , userID : "sabrina" },
+   "9sm5xK": { shortURL : "9sm5xK", longURL : "http://www.google.com" , userID : "sapnagoel" }
 };
 const users = {
   "sabrina": {
@@ -47,6 +47,19 @@ function isExistingUser(email){
   return userFound;
 }
 
+function userOwnsShortURL(shortURL,req){
+  let urlFound = false;
+  Object.keys(urlDatabase).forEach(key => {
+      if(urlDatabase[key].userID === req.cookies["user_id"]){
+        if(shortURL === urlDatabase[key].shortURL){
+          urlFound = true;
+          return;
+        }
+     }
+   });
+  return urlFound;
+}
+
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -64,9 +77,24 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
+   let templateVars ={ urls : "" , user : ""};
+  let userFound = false;
   if(req.cookies["user_id"]){
     let templateVars = { urls: urlDatabase ,  user: users[req.cookies["user_id"]] };
     res.render("urls_index", templateVars);
+   Object.keys(urlDatabase).forEach(key => {
+      if(urlDatabase[key].userID === req.cookies["user_id"]){
+       userFound = true;
+       templateVars  = { urls: urlDatabase[key] ,  user: users[req.cookies["user_id"]] };
+       return;
+     }
+   });
+    if(userFound){
+      res.render("urls_index", templateVars);
+    }else{
+      templateVars = { urls: " " ,  user: users[req.cookies["user_id"]] };
+      res.render("urls_new",templateVars);
+    }
   }else{
     res.render('user_login');
   }
@@ -87,14 +115,18 @@ app.get("/login", (req, res) => {
  });
 
 app.get("/u/:shortURL", (req, res) => {
-  let longURL =urlDatabase[req.params.shortURL];
+  let longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(longURL);
 });
 
 app.get("/urls/:id", (req, res) => {
   // TODO : condition checks for login by users and if shorturl belongs to particular user
-  let templateVars = { shortURL: req.params.id , longURL : urlDatabase[req.params.id],  user: users[req.cookies["user_id"]] };
-  res.render("urls_show", templateVars);
+  if(req.cookies["user_id"] && userOwnsShortURL(req.params.id,req)){
+    let templateVars = { shortURL: req.params.id , longURL : urlDatabase[req.params.id].longURL,  user: users[req.cookies["user_id"]] };
+    res.render("urls_show", templateVars);
+  }else{
+    res.status(401).send("This request is unauthorized or the URL doesn't exist");
+  }
 });
 
 app.get("/register", (req, res) => {
@@ -102,13 +134,17 @@ app.get("/register", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  let shortURL = generateRandomString();
-  urlDatabase[shortURL]=req.body.longURL;
+  let shortId = generateRandomString();
+  let url = { shortURL : "" , longURL : "" , userID : ""};
+  url.shortURL=shortId;
+  url.longURL = req.body.longURL;
+  url.userID = req.cookies["user_id"];
+  urlDatabase[shortId] = url;
   res.redirect("http://localhost:8080/urls/"+shortURL);
 });
 
 app.post("/urls/:id", (req, res) => {
-  urlDatabase[req.params.id]=req.body.newLongURL;
+  urlDatabase[req.params.id].longURL=req.body.newLongURL;
   res.redirect("/urls");;
 });
 
