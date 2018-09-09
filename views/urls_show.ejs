@@ -5,7 +5,7 @@
   <title>TinyApp</title>
 </head>
 <body>
-    <form method="POST" action="/urls/<%= shortURL %>/" >
+    <form method="POST" action="/urls/<%= shortURL%>/?_method=PUT" >
         <li>ShortURL : <%= shortURL%></li>
         <br>
         <input type="text" name="newLongURL" value= <%= longURL %>>

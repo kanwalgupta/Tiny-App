@@ -4,7 +4,9 @@ app.set("view engine", "ejs");
 const bcrypt = require("bcrypt");
 const bodyParser = require("body-parser");
 var cookieSession = require('cookie-session');
+var methodOverride = require('method-override');
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(methodOverride('_method'));
 var PORT = 8080; // default port 8080
 
 app.use(cookieSession({
@@ -144,13 +146,14 @@ app.post("/urls", (req, res) => {
   res.redirect("http://localhost:8080/urls/"+shortId);
 });
 
-app.post("/urls/:id", (req, res) => {
+// Functionality for PUT (Updating long URL for existing short URL)
+app.put("/urls/:id", (req, res) => {
   urlDatabase[req.params.id].longURL=req.body.newLongURL;
   res.redirect("/urls");;
 });
 
-app.post("/urls/:id/delete", (req, res) => {
-  console.log(req.params.id);
+// Functionality for delete using method override
+app.delete("/urls/:id", (req, res) => {
   delete urlDatabase[req.params.id];
   res.redirect("/urls");
 });
